@@ -1,8 +1,27 @@
-import React, {Component} from 'react';
+import {Circle, G, Rect} from 'react-native-svg';
+import React, {Component, Fragment} from 'react';
+import {chunk} from 'lodash';
 import {Text, View} from 'react-native';
 import Calendar from '../calendar';
+import SvgAnimatedLinearGradient from 'react-native-svg-animated-linear-gradient';
 import styleConstructor from './style';
+import styled from 'styled-components';
 
+const EmptyMonth = styled(View)`
+  align-items: center;
+  height: ${300}px;
+  justify-content: center;
+  width: ${300}px;
+`;
+
+const LoadingContainer = styled(View)`
+  align-items: center;
+  height: ${300}px;
+  justify-content: center;
+  position: absolute;
+  width: ${300}px;
+  z-index: -1;
+`;
 
 class CalendarListItem extends Component {
   static displayName = 'IGNORE';
@@ -21,6 +40,7 @@ class CalendarListItem extends Component {
   shouldComponentUpdate(nextProps) {
     const r1 = this.props.item;
     const r2 = nextProps.item;
+
     return r1.toString('yyyy MM') !== r2.toString('yyyy MM') || !!(r2.propbump && r2.propbump !== r1.propbump);
   }
 
@@ -31,6 +51,7 @@ class CalendarListItem extends Component {
       this.props.onPressArrowLeft(_, monthClone);
     } else if (this.props.scrollToMonth) {
       const currentMonth = monthClone.getMonth();
+
       monthClone.addMonths(-1);
 
       // Make sure we actually get the previous month, not just 30 days before currentMonth.
@@ -56,46 +77,71 @@ class CalendarListItem extends Component {
   render() {
     const row = this.props.item;
 
-    if (row.getTime) {
-      return (
+    return (<Fragment>
+      <SvgAnimatedLinearGradient
+        height={300}
+        primaryColor="#F5F9FC"
+        secondaryColor="#E4EAF2"
+        width={400}
+      >
+        <G>
+          {chunk(new Array(42), 7).map((rows, rowIndex) =>
+            rows.map((value, cellIndex) => (
+              <Circle
+                cx={40 / 2 + (40 + 16) * cellIndex}
+                cy={64 + (40 + 8) * rowIndex}
+                fill="#E4EAF2"
+                key={`cell_${rowIndex}-${cellIndex}`}
+                r={40 / 2}
+              />
+            ))
+          )}
+  
+          {new Array(7).map((value, index) => (
+            <Rect
+              fill="#E4EAF2"
+              height="12"
+              key={`row_${index}`}
+              rx="6"
+              width={40}
+              x={(40 + 16) * index}
+              y="12"
+            />
+          ))}
+        </G>
+      </SvgAnimatedLinearGradient>
+
+      {row.getTime &&
         <Calendar
-          testID={`${this.props.testID}_${row}`}
-          theme={this.props.theme}
-          style={[{height: this.props.calendarHeight, width: this.props.calendarWidth}, this.style.calendar, this.props.style]}
+          accessibilityElementsHidden={this.props.accessibilityElementsHidden}
           current={row}
-          hideArrows={this.props.hideArrows}
-          hideExtraDays={this.props.hideExtraDays}
-          disableMonthChange
-          markedDates={this.props.markedDates}
-          markingType={this.props.markingType}
-          hideDayNames={this.props.hideDayNames}
-          onDayPress={this.props.onDayPress}
-          onDayLongPress={this.props.onDayLongPress}
-          displayLoadingIndicator={this.props.displayLoadingIndicator}
-          minDate={this.props.minDate}
-          maxDate={this.props.maxDate}
-          firstDay={this.props.firstDay}
-          monthFormat={this.props.monthFormat}
           dayComponent={this.props.dayComponent}
           disabledByDefault={this.props.disabledByDefault}
-          showWeekNumbers={this.props.showWeekNumbers}
-          renderArrow={this.props.renderArrow}
+          disableMonthChange
+          displayLoadingIndicator={this.props.displayLoadingIndicator}
+          firstDay={this.props.firstDay}
+          headerStyle={this.props.horizontal ? this.props.headerStyle : undefined}
+          hideArrows={this.props.hideArrows}
+          hideDayNames={this.props.hideDayNames}
+          hideExtraDays={this.props.hideExtraDays}
+          importantForAccessibility={this.props.importantForAccessibility}
+          markedDates={this.props.markedDates}
+          markingType={this.props.markingType}
+          maxDate={this.props.maxDate}
+          minDate={this.props.minDate}
+          monthFormat={this.props.monthFormat}
+          onDayLongPress={this.props.onDayLongPress}
+          onDayPress={this.props.onDayPress}
           onPressArrowLeft={this.props.horizontal ? this.onPressArrowLeft : this.props.onPressArrowLeft}
           onPressArrowRight={this.props.horizontal ? this.onPressArrowRight : this.props.onPressArrowRight}
-          headerStyle={this.props.horizontal ? this.props.headerStyle : undefined}
-          accessibilityElementsHidden={this.props.accessibilityElementsHidden} // iOS
-          importantForAccessibility={this.props.importantForAccessibility} // Android
-        />
-      );
-    } else {
-      const text = row.toString();
-
-      return (
-        <View style={[{height: this.props.calendarHeight, width: this.props.calendarWidth}, this.style.placeholder]}>
-          <Text allowFontScaling={false} style={this.style.placeholderText}>{text}</Text>
-        </View>
-      );
-    }
+          renderArrow={this.props.renderArrow}
+          showWeekNumbers={this.props.showWeekNumbers}
+          style={[{height: this.props.calendarHeight, width: this.props.calendarWidth}, this.style.calendar, this.props.style]}
+          testID={`${this.props.testID}_${row}`} // iOS
+          theme={this.props.theme} // Android
+        />}
+    } 
+    </Fragment>);
   }
 }
 
